@@ -205,7 +205,7 @@ class SaneClient {
           return Buffer.concat(chunks, total);
         }
         if (length === 0) continue;
-        if (total + length > 250 * 1024 * 1024) throw new Error('Scan exceeded the 250 MB limit.');
+        if (total + length > 1024 * 1024 * 1024) throw new Error('Scan exceeded the 1 GB limit.');
         let remaining = length;
         while (remaining > 0) {
           const chunk = await data.wire.read(Math.min(remaining, 64 * 1024));

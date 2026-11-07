@@ -202,7 +202,7 @@ async function scan(id, hosts, settings, area, preview = false, onProgress, sign
         onProgress?.({ received: 0, total, frame, multiFrame });
         const pixels = await client.readFrame(data, (received) => onProgress?.({ received, total, frame, multiFrame }));
         totalBytes += pixels.length;
-        if (totalBytes > 250 * 1024 * 1024) throw new Error('Scan exceeded the 250 MB limit.');
+        if (totalBytes > 1024 * 1024 * 1024) throw new Error('Scan exceeded the 1 GB limit.');
         frames.push({ params, data: pixels, byteOrder: data.byteOrder });
       } catch (error) { data.wire.socket.destroy(); throw error; }
     } while (!frames[frames.length - 1].params.last);
@@ -216,11 +216,11 @@ function run(program, args, input) {
   return new Promise((resolve, reject) => {
     const child = spawn(program, args, { windowsHide: true });
     const output = []; const errors = []; let size = 0;
-    child.stdout.on('data', (chunk) => { size += chunk.length; if (size > 250 * 1024 * 1024) child.kill(); else output.push(chunk); });
+    child.stdout.on('data', (chunk) => { size += chunk.length; if (size > 1024 * 1024 * 1024) child.kill(); else output.push(chunk); });
     child.stderr.on('data', (chunk) => errors.push(chunk));
     child.on('error', (error) => reject(new Error(`Could not start ${program}: ${error.message}`)));
     child.on('close', (code) => {
-      if (size > 250 * 1024 * 1024) return reject(new Error('OCR output exceeded the 250 MB limit.'));
+      if (size > 1024 * 1024 * 1024) return reject(new Error('OCR output exceeded the 1 GB limit.'));
       if (code !== 0) return reject(new Error(Buffer.concat(errors).toString().trim() || `${program} exited with code ${code}`));
       resolve(Buffer.concat(output));
     });

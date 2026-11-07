@@ -41,10 +41,10 @@ async function exportPageData(page, format, options, recognize) {
     return Buffer.from(await pdf.save());
   }
   if (format === 'png' && !page.rulerDpi) return page.image;
-  let pipeline = sharp(page.image, { limitInputPixels: 60 * 1024 * 1024 });
+  let pipeline = sharp(page.image, { limitInputPixels: 340 * 1024 * 1024 });
   if (Number.isFinite(page.rulerDpi) && page.rulerDpi >= 1 && page.rulerDpi <= 100000) pipeline = pipeline.withMetadata({ density: Math.round(page.rulerDpi) });
   const result = await (format === 'png' ? pipeline.png() : pipeline.flatten({ background: '#ffffff' }).jpeg({ quality: 90 })).toBuffer();
-  if (result.length > 250 * 1024 * 1024) throw new Error('Exported page exceeds the 250 MB limit.');
+  if (result.length > 1024 * 1024 * 1024) throw new Error('Exported page exceeds the 1 GB limit.');
   return result;
 }
 

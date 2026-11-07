@@ -9,7 +9,7 @@ function encodeFrames(frames) {
   if (!(formats.length === 1 && [0, 1].includes(formats[0])) && !(formats.length === 3 && [2, 3, 4].every((format) => formats.includes(format)))) throw new Error('Unsupported or incomplete scan image frames.');
   const { width, bytesPerLine, depth } = first.params;
   const height = first.params.lines < 0 ? first.data.length / bytesPerLine : first.params.lines;
-  if (!Number.isInteger(height) || width < 1 || height < 1 || width * height > 60 * 1024 * 1024 || ![1, 8, 16].includes(depth)) throw new Error('Unsupported or oversized scan image.');
+  if (!Number.isInteger(height) || width < 1 || height < 1 || width * height > 340 * 1024 * 1024 || ![1, 8, 16].includes(depth)) throw new Error('Unsupported or oversized scan image.');
   const png = new PNG({ width, height });
   for (const frame of frames) {
     const params = frame.params;

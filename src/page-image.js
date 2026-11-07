@@ -3,8 +3,8 @@
 const sharp = require('sharp');
 const { analyzeSkew } = require('skew-score');
 
-const MAX_PIXELS = 60 * 1024 * 1024;
-const MAX_BYTES = 250 * 1024 * 1024;
+const MAX_PIXELS = 340 * 1024 * 1024;
+const MAX_BYTES = 1024 * 1024 * 1024;
 
 async function editImage(image, action, crop) {
   if (!Buffer.isBuffer(image) || image.length > MAX_BYTES) throw new Error('Invalid page image.');
@@ -33,7 +33,7 @@ async function editImage(image, action, crop) {
     pipeline = input.rotate(angle, { background: '#ffffff' });
   }
   const result = await pipeline.png().toBuffer();
-  if (result.length > MAX_BYTES) throw new Error('Edited page exceeds the 250 MB limit.');
+  if (result.length > MAX_BYTES) throw new Error('Edited page exceeds the 1 GB limit.');
   return { image: result, changed: true, angle };
 }
 

@@ -31,6 +31,12 @@ All items below are required for the release after 0.4.0.
 - [x] Choose the language from the Windows system language, with English as the fallback for unsupported languages. Keep translations local and available offline.
 - [x] Test supported locale selection, fallback behavior, and layouts with longer translated text.
 
+## Larger Scans
+
+- [x] Raise the per-page scan, edit, export, and OCR output limit from 250 MB to 1 GB.
+- [x] Raise the pixel limit for scans, edits, and export from 60 to 340 megapixels (the most 24-bit colour that fits in 1 GB), so accepted scans can still be edited and exported.
+- [x] Update error messages (all four languages) and the README. A single page can now use well over 1 GB of RAM during edit and export. Not tested with a real large scan.
+
 ## Verification
 
 - [x] Add focused automated tests for page selection, zoom/selection geometry, localization, and locale fallback.

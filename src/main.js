@@ -134,7 +134,7 @@ app.whenReady().then(() => {
     if (result.canceled || !result.filePath) return false;
     const format = pageExportFormat(result.filePath);
     const data = await exportPageData(snapshot, format, request, backend.ocr);
-    if (data.length > 250 * 1024 * 1024) throw new Error('Exported page exceeds the 250 MB limit.');
+    if (data.length > 1024 * 1024 * 1024) throw new Error('Exported page exceeds the 1 GB limit.');
     await fs.writeFile(result.filePath, data);
     return true;
   });
