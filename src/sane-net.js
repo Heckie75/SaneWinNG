@@ -61,14 +61,14 @@ function checkStatus(status) {
 }
 
 class SaneClient {
-  constructor(socket) { this.wire = new Wire(socket); }
+  constructor(socket, signal) { this.wire = new Wire(socket); this.signal = signal; }
 
-  static async connect(host, port = 6566) {
-    const socket = net.createConnection({ host, port });
+  static async connect(host, port = 6566, signal) {
+    const socket = net.createConnection({ host, port, signal });
     socket.setTimeout(10000, () => socket.destroy(new Error('SANE server connection timed out.')));
     try {
       await once(socket, 'connect');
-      const client = new SaneClient(socket);
+      const client = new SaneClient(socket, signal);
       client.wire.send(word(0), word(0x01000003), string('sanewin'));
       checkStatus(await client.wire.word());
       const version = await client.wire.word();
@@ -187,7 +187,7 @@ class SaneClient {
     if (resource) throw new Error('This SANE server requires authentication, which is not supported.');
     checkStatus(status);
     if (port < 1 || port > 65535) throw new Error('SANE server returned an invalid data port.');
-    const socket = net.createConnection({ host: this.wire.socket.remoteAddress, port });
+    const socket = net.createConnection({ host: this.wire.socket.remoteAddress, port, signal: this.signal });
     socket.setTimeout(30000, () => socket.destroy(new Error('SANE scan data connection timed out.')));
     try { await once(socket, 'connect'); } catch (error) { socket.destroy(); throw error; }
     return { wire: new Wire(socket, 120000), byteOrder };
@@ -230,7 +230,7 @@ class SaneClient {
     await this.wire.word();
   }
 
-  close() { this.wire.socket.end(word(10)); }
+  close() { if (this.signal?.aborted) this.wire.socket.destroy(); else this.wire.socket.end(word(10)); }
 }
 
 module.exports = { SaneClient, Wire, word, string, checkStatus, MAX_ITEMS };

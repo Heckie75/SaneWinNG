@@ -38,6 +38,19 @@ test('lists devices using SANE network protocol on a custom port', async () => {
   } finally { server.close(); }
 });
 
+test('aborts a stalled SANE control connection', async () => {
+  const server = net.createServer((socket) => { socket.on('error', () => {}); });
+  server.listen(0, '127.0.0.1');
+  await once(server, 'listening');
+  try {
+    const controller = new AbortController();
+    const connection = SaneClient.connect('127.0.0.1', server.address().port, controller.signal);
+    await once(server, 'connection');
+    controller.abort();
+    await assert.rejects(connection, { name: 'AbortError' });
+  } finally { server.close(); }
+});
+
 test('encodes grayscale and planar color scan frames', () => {
   const gray = encodeFrames([{ params: { format: 0, width: 2, lines: 1, bytesPerLine: 2, depth: 8 }, data: Buffer.from([0, 255]) }]);
   assert.deepEqual([...PNG.sync.read(gray).data], [0, 0, 0, 255, 255, 255, 255, 255]);

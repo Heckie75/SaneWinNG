@@ -11,7 +11,7 @@ test('preserves hosts and per-scanner preferences across concurrent updates', as
   const directory = await fs.mkdtemp(path.join(os.tmpdir(), 'sanewin-settings-'));
   context.after(() => fs.rm(directory, { recursive: true, force: true }));
   const store = new SettingsStore(path.join(directory, 'settings.json'));
-  const preferences = { selectedDevice: 'device1', scanners: { device1: { source: 'Flatbed', mode: 'Color', resolution: '300', paper: 'a4-portrait', area: { l: 0, t: 0, x: 210, y: 297 }, advanced: { 'custom-gamma': true, 'gamma-table': [0, 100], brightness: 12 } } }, ocr: true, language: 'eng', feeder: false };
+  const preferences = { selectedDevice: 'device1', scanners: { device1: { source: 'Flatbed', mode: 'Color', resolution: '300', paper: 'a4-portrait', area: { l: 0, t: 0, x: 210, y: 297 }, advanced: { 'custom-gamma': true, 'gamma-table': [0, 100], brightness: 12 } } }, ocr: true, language: 'eng', feeder: false, rulerUnit: 'in' };
   await Promise.all([store.setHosts(['scanner.local:6567']), store.setPreferences(preferences)]);
   const reopened = await new SettingsStore(store.file).read();
   assert.deepEqual(reopened.hosts, ['scanner.local:6567']);
@@ -19,6 +19,8 @@ test('preserves hosts and per-scanner preferences across concurrent updates', as
 });
 
 test('rejects invalid preference values', () => {
+  assert.equal(validatePreferences({}).rulerUnit, 'mm');
+  assert.throws(() => validatePreferences({ rulerUnit: 'yards' }), /Invalid/);
   assert.throws(() => validatePreferences({ scanners: { scanner: { advanced: { brightness: Infinity } } } }), /Invalid/);
   assert.throws(() => validatePreferences({ scanners: { scanner: { advanced: { arbitrary: 1 } } } }), /Invalid/);
   assert.throws(() => validatePreferences({ scanners: { scanner: { area: { l: 0, t: 0, x: NaN, y: 1 } } } }), /Invalid/);

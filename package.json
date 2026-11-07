@@ -1,6 +1,6 @@
 {
   "name": "sanewin-ng",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "description": "A modern desktop client for SANE scanners",
   "main": "src/main.js",
   "scripts": {
@@ -11,10 +11,13 @@
   "dependencies": {
     "@fontsource-variable/manrope": "^5.3.0",
     "@fontsource/dm-sans": "^5.3.0",
+    "@img/sharp-wasm32": "0.35.5",
     "bonjour-service": "^1.4.4",
     "lucide-static": "^0.468.0",
     "pdf-lib": "^1.17.1",
-    "pngjs": "^7.0.0"
+    "pngjs": "^7.0.0",
+    "sharp": "0.35.5",
+    "skew-score": "1.1.1"
   },
   "devDependencies": {
     "electron": "^45.2.3",
@@ -26,6 +29,9 @@
     "files": [
       "src/**/*",
       "node_modules/lucide-static/icons/*"
+    ],
+    "asarUnpack": [
+      "node_modules/@img/sharp-wasm32/**/*"
     ],
     "win": {
       "target": "nsis"

@@ -8,8 +8,8 @@ const ADVANCED = new Set(['custom-gamma', 'gamma-table', 'red-gamma-table', 'gre
 
 function validatePreferences(preferences) {
   if (!preferences || typeof preferences !== 'object' || Array.isArray(preferences) || JSON.stringify(preferences).length > 2 * 1024 * 1024) throw new Error('Invalid preferences.');
-  const { selectedDevice = '', scanners = {}, ocr = false, language = '', feeder = false } = preferences;
-  if (typeof selectedDevice !== 'string' || selectedDevice.length > 8192 || !scanners || typeof scanners !== 'object' || Array.isArray(scanners) || Object.keys(scanners).length > 100 || typeof ocr !== 'boolean' || typeof feeder !== 'boolean' || typeof language !== 'string' || !/^[\w+-]{0,100}$/.test(language)) throw new Error('Invalid preferences.');
+  const { selectedDevice = '', scanners = {}, ocr = false, language = '', feeder = false, rulerUnit = 'mm' } = preferences;
+  if (typeof selectedDevice !== 'string' || selectedDevice.length > 8192 || !scanners || typeof scanners !== 'object' || Array.isArray(scanners) || Object.keys(scanners).length > 100 || typeof ocr !== 'boolean' || typeof feeder !== 'boolean' || typeof language !== 'string' || !/^[\w+-]{0,100}$/.test(language) || !['mm', 'in', 'px'].includes(rulerUnit)) throw new Error('Invalid preferences.');
   const savedScanners = {};
   for (const [id, scanner] of Object.entries(scanners)) {
     if (!/^[\w-]{1,8192}$/.test(id) || !scanner || typeof scanner !== 'object' || Array.isArray(scanner)) throw new Error('Invalid scanner preferences.');
@@ -23,7 +23,7 @@ function validatePreferences(preferences) {
     }
     savedScanners[id] = { source, mode, resolution, paper, area: area && { l: area.l, t: area.t, x: area.x, y: area.y }, advanced: savedAdvanced };
   }
-  return { selectedDevice, scanners: savedScanners, ocr, language, feeder };
+  return { selectedDevice, scanners: savedScanners, ocr, language, feeder, rulerUnit };
 }
 
 class SettingsStore {

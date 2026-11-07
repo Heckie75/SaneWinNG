@@ -7,12 +7,15 @@
   <title>SaneWin NG</title>
   <link rel="stylesheet" href="styles.css">
   <script src="paper.js" defer></script>
+  <script src="ruler.js" defer></script>
+  <script src="i18n.js" defer></script>
   <script src="renderer.js" defer></script>
 </head>
 <body>
   <header class="topbar">
     <div class="brand"><span class="brand-mark"><img src="../node_modules/lucide-static/icons/scan-line.svg" alt=""></span><span>SaneWin <strong>NG</strong></span></div>
-    <div class="topbar-center"><span class="status-dot"></span><span id="connection-status">Looking for scanners</span></div>
+    <div class="topbar-center" tabindex="0" aria-label="Scanner status and preview information"><div class="topbar-status"><span class="status-dot"></span><span id="connection-status">Looking for scanners</span><span class="feedback" id="feedback" role="status" aria-live="polite"></span></div><div class="footer-note"><img src="../node_modules/lucide-static/icons/mouse-pointer-2.svg" alt=""><span id="preview-hint">Preview your document to select an area.</span></div></div>
+    <div class="scan-actions"><button id="preview" class="button secondary" disabled><img src="../node_modules/lucide-static/icons/scan-eye.svg" alt=""> Preview</button><button id="scan" class="button primary" disabled><img src="../node_modules/lucide-static/icons/scan-line.svg" alt=""> Scan page</button></div>
     <div class="topbar-actions"><button class="icon-button" id="network-open" title="Network scanners" aria-label="Network scanners"><img src="../node_modules/lucide-static/icons/network.svg" alt=""></button><button class="icon-button" id="refresh" title="Refresh scanners" aria-label="Refresh scanners"><img src="../node_modules/lucide-static/icons/refresh-cw.svg" alt=""></button></div>
   </header>
   <main class="app-layout">
@@ -32,15 +35,18 @@
     </aside>
 
     <section class="workspace">
-      <div class="workspace-heading"><div><span class="eyebrow">YOUR WORKSPACE</span><h1>Ready to scan<span class="accent-dot">.</span></h1><p>Preview, select, and bring your pages together.</p></div><span class="workspace-tag"><span></span> SCAN STUDIO</span></div>
-      <div class="preview-toolbar"><div><span class="toolbar-label">PREVIEW</span><span id="area-label" class="toolbar-detail">Full scan area</span></div><button id="reset-area" class="text-button" disabled><img src="../node_modules/lucide-static/icons/rotate-ccw.svg" alt=""> Reset area</button></div>
-      <div class="scan-progress" id="scan-progress-container" hidden><div class="progress-heading"><span id="scan-progress-label">Scanning...</span><span id="scan-progress-percent"></span></div><progress id="scan-progress" max="100" aria-label="Scan progress"></progress></div>
-      <div class="preview-stage" id="preview-stage">
-        <div class="empty-preview" id="empty-preview"><div class="empty-icon"><img src="../node_modules/lucide-static/icons/scan.svg" alt=""></div><h2>A clear view starts here</h2><p>Select a scanner and create a preview.</p></div>
-        <div class="scan-sheet" id="scan-sheet" hidden><img id="preview-image" alt="Scanner preview"><div id="selection" class="selection" hidden></div></div>
+      <div class="preview-toolbar"><div><span class="toolbar-label">PREVIEW</span><span id="area-label" class="toolbar-detail">Full scan area</span><span id="ruler-size" class="toolbar-detail" hidden></span><span id="ruler-status" class="toolbar-detail" hidden>Ruler DPI unavailable</span></div><div class="preview-toolbar-actions"><div class="zoom-controls" role="group" aria-label="Preview zoom"><button id="zoom-out" class="icon-button" title="Zoom out" aria-label="Zoom out" disabled><img src="../node_modules/lucide-static/icons/zoom-out.svg" alt=""></button><span id="zoom-value" class="zoom-value" aria-live="polite">--</span><button id="zoom-in" class="icon-button" title="Zoom in" aria-label="Zoom in" disabled><img src="../node_modules/lucide-static/icons/zoom-in.svg" alt=""></button><button id="zoom-actual" class="text-button" title="Actual size" disabled>100%</button><button id="zoom-fit" class="icon-button" title="Fit to viewport" aria-label="Fit to viewport" disabled><img src="../node_modules/lucide-static/icons/maximize.svg" alt=""></button></div><div id="page-edit-actions" class="page-edit-actions" role="group" aria-label="Edit page" hidden><button id="page-rotate-left" class="icon-button" title="Rotate page left" aria-label="Rotate page left"><img src="../node_modules/lucide-static/icons/rotate-ccw.svg" alt=""></button><button id="page-rotate-right" class="icon-button" title="Rotate page right" aria-label="Rotate page right"><img src="../node_modules/lucide-static/icons/rotate-cw.svg" alt=""></button><button id="page-deskew" class="icon-button" title="Automatically straighten page" aria-label="Automatically straighten page"><img src="../node_modules/lucide-static/icons/wand-sparkles.svg" alt=""></button><button id="page-crop" class="icon-button" title="Crop page" aria-label="Crop page"><img src="../node_modules/lucide-static/icons/crop.svg" alt=""></button><button id="page-crop-apply" class="icon-button" title="Apply crop" aria-label="Apply crop" hidden><img src="../node_modules/lucide-static/icons/check.svg" alt=""></button><button id="page-crop-cancel" class="icon-button" title="Cancel crop" aria-label="Cancel crop" hidden><img src="../node_modules/lucide-static/icons/x.svg" alt=""></button><button id="page-undo" class="icon-button" title="Undo last page edit" aria-label="Undo last page edit"><img src="../node_modules/lucide-static/icons/undo-2.svg" alt=""></button></div><button id="show-scanner-preview" class="text-button" hidden><img src="../node_modules/lucide-static/icons/scan-eye.svg" alt=""> Scanner preview</button><button id="reset-area" class="text-button" disabled><img src="../node_modules/lucide-static/icons/rotate-ccw.svg" alt=""> Reset area</button></div></div>
+      <div class="scan-progress" id="scan-progress-container" hidden><div class="progress-heading"><span id="scan-progress-label">Scanning...</span><span id="scan-progress-percent"></span><button id="cancel-scan" class="text-button" type="button">Cancel scan</button></div><progress id="scan-progress" max="100" aria-label="Scan progress"></progress></div>
+      <div class="preview-viewport">
+        <button id="ruler-unit" class="ruler-corner" type="button" title="Ruler units" aria-label="Ruler units" aria-haspopup="menu" aria-expanded="false">mm</button>
+        <div id="ruler-x" class="ruler ruler-x" aria-label="Horizontal ruler"><div id="ruler-x-selection" class="ruler-selection" hidden></div><div id="ruler-x-ticks"></div><div id="ruler-x-pointer" class="ruler-pointer" hidden></div></div>
+        <div id="ruler-y" class="ruler ruler-y" aria-label="Vertical ruler"><div id="ruler-y-selection" class="ruler-selection" hidden></div><div id="ruler-y-ticks"></div><div id="ruler-y-pointer" class="ruler-pointer" hidden></div></div>
+        <div class="preview-stage" id="preview-stage" title="Hold Ctrl and scroll to zoom">
+          <div class="empty-preview" id="empty-preview"><div class="empty-icon"><img src="../node_modules/lucide-static/icons/scan.svg" alt=""></div><h2>A clear view starts here</h2><p>Select a scanner and create a preview.</p></div>
+          <div class="scan-sheet" id="scan-sheet" hidden><img id="preview-image" alt="Scanner preview"><div id="selection" class="selection" hidden></div></div>
+        </div>
       </div>
-      <div class="workspace-footer"><div class="footer-note"><img src="../node_modules/lucide-static/icons/mouse-pointer-2.svg" alt=""><span id="preview-hint">Preview your document to select an area.</span></div><div class="scan-actions"><button id="preview" class="button secondary" disabled><img src="../node_modules/lucide-static/icons/scan-eye.svg" alt=""> Preview</button><button id="scan" class="button primary" disabled><img src="../node_modules/lucide-static/icons/scan-line.svg" alt=""> Scan page</button></div></div>
-      <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+      <div id="ruler-menu" class="ruler-menu" role="menu" aria-label="Ruler units" hidden><button type="button" role="menuitemradio" id="ruler-mm">Millimeters</button><button type="button" role="menuitemradio" id="ruler-in">Inches</button><button type="button" role="menuitemradio" id="ruler-px">Pixels</button></div>
     </section>
 
     <aside class="document-panel">

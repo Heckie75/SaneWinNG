@@ -66,12 +66,13 @@ async function listDevices(hosts) {
   return { devices: results.flatMap((result) => result.status === 'fulfilled' ? result.value : []), warnings: results.flatMap((result, index) => result.status === 'rejected' ? [`${endpoints[index]}: ${result.reason.message}`] : []) };
 }
 
-async function withDevice(id, hosts, callback) {
+async function withDevice(id, hosts, callback, signal) {
+  signal?.throwIfAborted();
   const device = decodeDevice(id, validateHosts(hosts));
   const { host, port } = parseHost(device.endpoint);
-  const client = await SaneClient.connect(host, port);
+  const client = await SaneClient.connect(host, port, signal);
   try { await client.open(device.name); return await callback(client); }
-  finally { try { await client.closeDevice(); } catch {} client.close(); }
+  finally { if (!signal?.aborted) { try { await client.closeDevice(); } catch {} } client.close(); }
 }
 
 function numberValue(value, type) { return type === 2 ? (value | 0) / 65536 : value | 0; }
@@ -149,15 +150,20 @@ function validateOption(option, value) {
   return value;
 }
 
-async function scan(id, hosts, settings, area, preview = false, onProgress) {
+async function scan(id, hosts, settings, area, preview = false, onProgress, signal) {
   if (!settings || typeof settings !== 'object') throw new Error('Invalid scan settings.');
   return withDevice(id, hosts, async (client) => {
     let options = await client.options();
     let dpi = 300;
+    let rulerDpi = null;
     async function set(name, value) {
+      const option = options.find((item) => item?.name === name);
       const result = await applyOption(client, options, name, value);
       options = result.options;
-      if (name === 'resolution' && result.value !== undefined) dpi = Number(result.value);
+      if (name === 'resolution' && result.value !== undefined) {
+        dpi = Number(result.value);
+        if (option?.unit === 4 && Number.isFinite(dpi) && dpi > 0) rulerDpi = dpi;
+      }
     }
     await set('source', settings.source);
     await set('mode', settings.mode);
@@ -172,7 +178,11 @@ async function scan(id, hosts, settings, area, preview = false, onProgress) {
     await set('resolution', selectedResolution);
     if (settings.advanced !== undefined && (!settings.advanced || typeof settings.advanced !== 'object' || Array.isArray(settings.advanced) || Object.keys(settings.advanced).some((name) => !ADVANCED_OPTIONS.includes(name)))) throw new Error('Invalid advanced scanner settings.');
     for (const name of ADVANCED_OPTIONS) await set(name, settings.advanced?.[name]);
-    if (resolution && (!selectedResolution || !Number.isFinite(dpi) || dpi <= 0)) dpi = Number((await client.control(resolution)).value) || 300;
+    if (resolution && (!selectedResolution || !Number.isFinite(dpi) || dpi <= 0)) {
+      const current = Number((await client.control(resolution)).value);
+      if (resolution.unit === 4 && Number.isFinite(current) && current > 0) rulerDpi = current;
+      dpi = current || 300;
+    }
     if (area) {
       const { l, t, x, y } = area;
       if (![l, t, x, y].every((value) => Number.isFinite(value)) || x <= 0 || y <= 0) throw new Error('Invalid scan area.');
@@ -181,6 +191,7 @@ async function scan(id, hosts, settings, area, preview = false, onProgress) {
     const frames = [];
     let totalBytes = 0;
     do {
+      signal?.throwIfAborted();
       if (frames.length >= 3) throw new Error('Unsupported number of scan frames.');
       const data = await client.start();
       try {
@@ -196,8 +207,9 @@ async function scan(id, hosts, settings, area, preview = false, onProgress) {
       } catch (error) { data.wire.socket.destroy(); throw error; }
     } while (!frames[frames.length - 1].params.last);
     await client.cancel();
-    return { image: encodeFrames(frames), dpi };
-  });
+    signal?.throwIfAborted();
+    return { image: encodeFrames(frames), dpi, rulerDpi };
+  }, signal);
 }
 
 function run(program, args, input) {
