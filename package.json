@@ -1,0 +1,34 @@
+{
+  "name": "sanewin-ng",
+  "version": "0.4.0",
+  "description": "A modern desktop client for SANE scanners",
+  "main": "src/main.js",
+  "scripts": {
+    "start": "electron .",
+    "test": "node --test test/*.test.js",
+    "dist:win": "electron-builder --win"
+  },
+  "dependencies": {
+    "@fontsource-variable/manrope": "^5.3.0",
+    "@fontsource/dm-sans": "^5.3.0",
+    "bonjour-service": "^1.4.4",
+    "lucide-static": "^0.468.0",
+    "pdf-lib": "^1.17.1",
+    "pngjs": "^7.0.0"
+  },
+  "devDependencies": {
+    "electron": "^45.2.3",
+    "electron-builder": "^26.18.0"
+  },
+  "build": {
+    "appId": "org.sanewinng.app",
+    "productName": "SaneWin NG",
+    "files": [
+      "src/**/*",
+      "node_modules/lucide-static/icons/*"
+    ],
+    "win": {
+      "target": "nsis"
+    }
+  }
+}

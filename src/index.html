@@ -1,0 +1,55 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="Content-Security-Policy" content="default-src 'self'; img-src 'self' data:; style-src 'self'; script-src 'self'">
+  <title>SaneWin NG</title>
+  <link rel="stylesheet" href="styles.css">
+  <script src="paper.js" defer></script>
+  <script src="renderer.js" defer></script>
+</head>
+<body>
+  <header class="topbar">
+    <div class="brand"><span class="brand-mark"><img src="../node_modules/lucide-static/icons/scan-line.svg" alt=""></span><span>SaneWin <strong>NG</strong></span></div>
+    <div class="topbar-center"><span class="status-dot"></span><span id="connection-status">Looking for scanners</span></div>
+    <div class="topbar-actions"><button class="icon-button" id="network-open" title="Network scanners" aria-label="Network scanners"><img src="../node_modules/lucide-static/icons/network.svg" alt=""></button><button class="icon-button" id="refresh" title="Refresh scanners" aria-label="Refresh scanners"><img src="../node_modules/lucide-static/icons/refresh-cw.svg" alt=""></button></div>
+  </header>
+  <main class="app-layout">
+    <aside class="settings-panel">
+      <div class="panel-title"><div><span class="eyebrow">SETUP</span><h2>Scanner</h2></div><img class="heading-icon" src="../node_modules/lucide-static/icons/printer.svg" alt=""></div>
+      <label class="field"><span>Device</span><select id="device"><option value="">Searching...</option></select></label>
+      <p class="device-description" id="device-description">Searching for available devices.</p>
+      <div class="section-divider"></div>
+      <div class="section-heading"><h3>Scan settings</h3><span class="section-index">01</span></div>
+      <label class="field"><span>Source</span><select id="source" disabled><option>Not available</option></select></label>
+      <label class="field"><span>Paper size</span><select id="paper" disabled><option value="free">Free selection</option><option value="a3-portrait">A3 portrait</option><option value="a3-landscape">A3 landscape</option><option value="a4-portrait">A4 portrait</option><option value="a4-landscape">A4 landscape</option><option value="a5-portrait">A5 portrait</option><option value="a5-landscape">A5 landscape</option><option value="a6-portrait">A6 portrait</option><option value="a6-landscape">A6 landscape</option><option value="letter-portrait">Letter portrait</option><option value="letter-landscape">Letter landscape</option><option value="legal-portrait">Legal portrait</option><option value="legal-landscape">Legal landscape</option></select></label>
+      <label class="field"><span>Color mode</span><select id="mode" disabled><option>Not available</option></select></label>
+      <label class="field"><span>Resolution</span><select id="resolution" disabled><option>Not available</option></select></label>
+      <div class="hint-row"><img src="../node_modules/lucide-static/icons/info.svg" alt=""><span>Settings depend on your scanner.</span></div>
+      <details class="advanced-settings" id="advanced-settings"><summary>Advanced settings <img src="../node_modules/lucide-static/icons/chevron-down.svg" alt=""></summary><div id="advanced-options"></div></details>
+      <div class="sidebar-bottom"><span class="sidebar-icon"><img src="../node_modules/lucide-static/icons/shield-check.svg" alt=""></span><div><strong>Local documents</strong><span>PDF export stays on your device.</span></div></div>
+    </aside>
+
+    <section class="workspace">
+      <div class="workspace-heading"><div><span class="eyebrow">YOUR WORKSPACE</span><h1>Ready to scan<span class="accent-dot">.</span></h1><p>Preview, select, and bring your pages together.</p></div><span class="workspace-tag"><span></span> SCAN STUDIO</span></div>
+      <div class="preview-toolbar"><div><span class="toolbar-label">PREVIEW</span><span id="area-label" class="toolbar-detail">Full scan area</span></div><button id="reset-area" class="text-button" disabled><img src="../node_modules/lucide-static/icons/rotate-ccw.svg" alt=""> Reset area</button></div>
+      <div class="scan-progress" id="scan-progress-container" hidden><div class="progress-heading"><span id="scan-progress-label">Scanning...</span><span id="scan-progress-percent"></span></div><progress id="scan-progress" max="100" aria-label="Scan progress"></progress></div>
+      <div class="preview-stage" id="preview-stage">
+        <div class="empty-preview" id="empty-preview"><div class="empty-icon"><img src="../node_modules/lucide-static/icons/scan.svg" alt=""></div><h2>A clear view starts here</h2><p>Select a scanner and create a preview.</p></div>
+        <div class="scan-sheet" id="scan-sheet" hidden><img id="preview-image" alt="Scanner preview"><div id="selection" class="selection" hidden></div></div>
+      </div>
+      <div class="workspace-footer"><div class="footer-note"><img src="../node_modules/lucide-static/icons/mouse-pointer-2.svg" alt=""><span id="preview-hint">Preview your document to select an area.</span></div><div class="scan-actions"><button id="preview" class="button secondary" disabled><img src="../node_modules/lucide-static/icons/scan-eye.svg" alt=""> Preview</button><button id="scan" class="button primary" disabled><img src="../node_modules/lucide-static/icons/scan-line.svg" alt=""> Scan page</button></div></div>
+      <div class="feedback" id="feedback" role="status" aria-live="polite"></div>
+    </section>
+
+    <aside class="document-panel">
+      <div class="panel-title"><div><span class="eyebrow">OUTPUT</span><h2>Document</h2></div><span class="page-count" id="page-count">0</span></div>
+      <div class="document-heading"><div><h3>Pages</h3><p id="page-summary">No pages yet</p></div><img src="../node_modules/lucide-static/icons/files.svg" alt=""></div>
+      <div id="pages" class="pages"><div class="empty-pages"><img src="../node_modules/lucide-static/icons/file-plus-2.svg" alt=""><strong>Your pages appear here</strong><span>Scanned pages are collected in order.</span></div></div>
+      <div class="export-panel"><div class="section-heading"><h3>Export options</h3><span class="section-index">02</span></div><label class="check-row"><input type="checkbox" id="ocr"><span><strong>Recognize text</strong><small id="ocr-detail">Make your PDF searchable</small></span></label><label class="field ocr-language" id="language-field" hidden><span>OCR language</span><select id="language"></select></label><label class="check-row feeder-row"><input type="checkbox" id="feeder" disabled><span><strong>Scan entire feeder</strong><small>Continue until the feeder is empty</small></span></label><button id="export" class="button export-button" disabled><img src="../node_modules/lucide-static/icons/download.svg" alt=""> Export PDF</button></div>
+    </aside>
+  </main>
+  <dialog id="network-dialog"><form method="dialog" class="dialog-header"><div><span class="eyebrow">CONNECTIONS</span><h2>Network scanners</h2></div><button class="icon-button" aria-label="Close" title="Close"><img src="../node_modules/lucide-static/icons/x.svg" alt=""></button></form><p class="dialog-copy">Add a SANE server by hostname or IP address, with an optional port.</p><div class="host-entry"><input id="host-input" type="text" aria-label="SANE server address" placeholder="192.168.1.10:6566" autocomplete="off"><button id="host-add" class="button primary">Add</button></div><div id="host-list" class="host-list"></div><button id="discover" class="button secondary discover"><img src="../node_modules/lucide-static/icons/radar.svg" alt=""> Discover on network</button><p class="dialog-note">Discovery finds SANE servers advertising via mDNS. Connections are unencrypted.</p><div id="network-feedback" class="dialog-feedback" role="status"></div></dialog>
+</body>
+</html>
