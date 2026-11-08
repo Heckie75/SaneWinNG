@@ -14,6 +14,8 @@ contextBridge.exposeInMainWorld('scanner', {
   preview: (request) => ipcRenderer.invoke('preview', request),
   scan: (request) => ipcRenderer.invoke('scan', request),
   cancelScan: () => ipcRenderer.invoke('scan:cancel'),
+  copyPage: (id) => ipcRenderer.invoke('page:copy', id),
+  pastePage: () => ipcRenderer.invoke('pages:paste'),
   removePage: (id) => ipcRenderer.invoke('pages:remove', id),
   reorderPages: (ids) => ipcRenderer.invoke('pages:reorder', ids),
   editPage: (request) => ipcRenderer.invoke('page:edit', request),

@@ -2,7 +2,7 @@
 
 const element = (id) => document.getElementById(id);
 const state = { locale: 'en', hosts: [], devices: [], capabilities: {}, pages: [], selectedPageId: null, cropPageId: null, cropBox: null, scannerPreview: null, scannerPreviewDpi: null, shownImage: null, zoom: null, area: null, previewArea: null, selectionBox: null, pointer: null, busy: false, ocrAvailable: false, ready: false, advanced: {}, invalid: new Set(), preferences: { selectedDevice: '', scanners: {}, ocr: false, language: '', feeder: false, rulerUnit: 'mm' } };
-const controls = ['device', 'source', 'mode', 'resolution', 'preview', 'scan', 'refresh', 'network-open', 'export', 'feeder', 'ocr'];
+const controls = ['device', 'source', 'mode', 'resolution', 'preview', 'scan', 'refresh', 'network-open', 'export', 'feeder', 'ocr', 'paste-page'];
 const t = (key, values) => window.i18n.translate(state.locale, key, values);
 const errorText = (error) => window.i18n.translateError(state.locale, error);
 
@@ -456,7 +456,7 @@ function renderPages() {
     const info = document.createElement('div'); info.className = 'page-info'; info.textContent = t('Page {number}', { number: index + 1 });
     const detail = document.createElement('span'); detail.textContent = t('Scanned page'); info.append(detail);
     const actions = document.createElement('div'); actions.className = 'page-actions';
-    for (const [action, icon, title, disabled] of [['up', 'chevron-up', 'Move page up', index === 0], ['down', 'chevron-down', 'Move page down', index === state.pages.length - 1], ['export', 'download', 'Export page', false], ['remove', 'trash-2', 'Remove page', false]]) {
+    for (const [action, icon, title, disabled] of [['up', 'chevron-up', 'Move page up', index === 0], ['down', 'chevron-down', 'Move page down', index === state.pages.length - 1], ['export', 'download', 'Export page', false], ['copy', 'copy', 'Copy page', false], ['remove', 'trash-2', 'Remove page', false]]) {
       const button = document.createElement('button'); button.className = 'icon-button'; button.title = t(title); button.setAttribute('aria-label', t(title)); button.disabled = disabled || state.busy;
       const image = document.createElement('img'); image.src = `../node_modules/lucide-static/icons/${icon}.svg`; image.alt = ''; button.append(image);
       button.addEventListener('click', () => operation(action === 'export' ? 'Exporting page...' : 'Updating pages...', async () => {
@@ -464,6 +464,7 @@ function renderPages() {
           const saved = await window.scanner.exportPage({ id: page.id, ocr: element('ocr').checked, language: element('language').value });
           message(saved ? 'Page exported.' : 'Page export canceled.'); return;
         }
+        if (action === 'copy') { await window.scanner.copyPage(page.id); message('Page copied.'); return; }
         if (action === 'remove') {
           await window.scanner.removePage(page.id); state.pages.splice(index, 1);
           if (state.selectedPageId === page.id) state.selectedPageId = state.pages[Math.min(index, state.pages.length - 1)]?.id ?? null;
@@ -477,6 +478,21 @@ function renderPages() {
     select.append(image, info); row.append(select, actions); container.append(row);
   });
 }
+
+function pastePage() {
+  return operation('Pasting image...', async () => {
+    const page = await window.scanner.pastePage();
+    state.pages.push(page); state.selectedPageId = page.id;
+    renderPreview(); renderPages(); message('Image pasted.');
+  });
+}
+
+element('paste-page').addEventListener('click', pastePage);
+document.addEventListener('keydown', (event) => {
+  if (!(event.ctrlKey || event.metaKey) || event.altKey || event.key.toLowerCase() !== 'v' || event.target?.isContentEditable || /^(INPUT|TEXTAREA|SELECT)$/.test(event.target?.tagName || '') || element('network-dialog').open) return;
+  event.preventDefault();
+  pastePage();
+});
 
 function drawSelection(start, end) {
   const left = Math.min(start.x, end.x); const top = Math.min(start.y, end.y);

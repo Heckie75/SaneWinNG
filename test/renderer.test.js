@@ -47,7 +47,8 @@ function renderer() {
   };
   let resize;
   const ResizeObserver = class { constructor(callback) { resize = callback; } observe() {} };
-  const document = { getElementById: element, createElement: () => new Element(), addEventListener() {}, documentElement: {}, body: {} };
+  const documentListeners = {};
+  const document = { getElementById: element, createElement: () => new Element(), addEventListener: (name, listener) => { (documentListeners[name] ||= []).push(listener); }, dispatch: (name, event) => documentListeners[name]?.forEach((listener) => listener(event)), documentElement: {}, body: {} };
   const Option = class { constructor(text, value) { this.textContent = text; this.value = value; } };
   const context = vm.createContext({ document, Option, NodeFilter: { SHOW_TEXT: 4 }, window: { scanner, ResizeObserver, paperGeometry: require('../src/paper'), rulerGeometry: require('../src/ruler'), i18n: require('../src/i18n'), innerWidth: 1000, innerHeight: 800 }, confirm: () => true });
   const source = fs.readFileSync(path.join(__dirname, '../src/renderer.js'), 'utf8');
@@ -118,12 +119,12 @@ test('reordering and removing pages retain selection or choose the nearest page'
   assert.deepEqual(order, [1, 3, 2]);
   assert.equal(element('preview-image').src, 'third');
   assert.equal(element('preview-image').alt, 'Scanned page 2');
-  await pages.children[1].children[1].children[3].dispatch('click');
+  await pages.children[1].children[1].children[4].dispatch('click');
   assert.equal(element('preview-image').src, 'second');
   assert.equal(run('state.selectedPageId'), 2);
-  await pages.children[1].children[1].children[3].dispatch('click');
+  await pages.children[1].children[1].children[4].dispatch('click');
   assert.equal(element('preview-image').src, 'first');
-  await pages.children[0].children[1].children[3].dispatch('click');
+  await pages.children[0].children[1].children[4].dispatch('click');
   assert.equal(element('empty-preview').hidden, false);
   assert.equal(element('scan-sheet').hidden, true);
   assert.equal(run('state.selectedPageId'), null);
@@ -149,7 +150,7 @@ test('scanner preview and scan area remain separate from page viewing', async ()
   assert.equal(element('selection').hidden, false);
   assert.equal(run('state.area.x'), 30);
   element('pages').children[0].firstElementChild.dispatch('click');
-  await element('pages').children[0].children[1].children[3].dispatch('click');
+  await element('pages').children[0].children[1].children[4].dispatch('click');
   assert.equal(element('preview-image').src, 'scanner-image');
   assert.equal(element('selection').hidden, false);
   scanner.scan = async () => ({ pages: [{ id: 2, image: 'another-page' }], warning: '' });
@@ -197,7 +198,8 @@ test('exports the chosen page without altering the document or main PDF action',
   scanner.exportPage = async (request) => { exported = request; return true; };
   const actions = element('pages').children[1].children[1].children;
   assert.equal(actions[2].attributes['aria-label'], 'Export page');
-  assert.equal(actions[3].attributes['aria-label'], 'Remove page');
+  assert.equal(actions[3].attributes['aria-label'], 'Copy page');
+  assert.equal(actions[4].attributes['aria-label'], 'Remove page');
   await actions[2].dispatch('click');
   assert.equal(exported.id, 2);
   assert.equal(exported.ocr, true);
@@ -205,6 +207,30 @@ test('exports the chosen page without altering the document or main PDF action',
   assert.equal(element('feedback').textContent, 'Page exported.');
   assert.equal(run('state.pages.length'), 2);
   assert.equal(run('state.selectedPageId'), 1);
+});
+
+test('copies pages and pastes clipboard images without intercepting text input', async () => {
+  const { element, scanner, document, run } = renderer();
+  run("state.pages = [{ id: 1, image: 'first' }]; state.selectedPageId = 1; renderPreview(); renderPages();");
+  let copied;
+  scanner.copyPage = async (id) => { copied = id; };
+  scanner.pastePage = async () => ({ id: 2, image: 'pasted', dpi: 200 });
+  await element('pages').children[0].children[1].children[3].dispatch('click');
+  assert.equal(copied, 1);
+  assert.equal(element('feedback').textContent, 'Page copied.');
+  await element('paste-page').dispatch('click');
+  assert.equal(run('state.pages.length'), 2);
+  assert.equal(run('state.selectedPageId'), 2);
+  assert.equal(element('preview-image').src, 'pasted');
+  let prevented = false;
+  document.dispatch('keydown', { key: 'v', ctrlKey: true, target: { tagName: 'INPUT' }, preventDefault: () => { prevented = true; } });
+  assert.equal(prevented, false);
+  scanner.pastePage = async () => ({ id: 3, image: 'pasted again' });
+  document.dispatch('keydown', { key: 'v', ctrlKey: true, target: { tagName: 'DIV' }, preventDefault: () => { prevented = true; } });
+  await new Promise((resolve) => setImmediate(resolve));
+  assert.equal(prevented, true);
+  assert.equal(run('state.pages.length'), 3);
+  assert.equal(run('state.selectedPageId'), 3);
 });
 
 test('zoom controls fit, resize, use actual pixels, and anchor mouse zoom', () => {

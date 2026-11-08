@@ -38,6 +38,8 @@ Clicking a scanned page shows it in the preview area without changing the next s
 
 Use the page controls to reorder or remove scans. Select a scanned page to rotate it, choose and apply a crop, or attempt automatic deskew; deskew targets small tilts up to 10 degrees and needs clear line structure. Page edits replace the in-memory page and have one undo level per page; retaining that previous image increases memory usage. Crop selection is separate from the next scan area. The per-page export icon saves PNG, JPG/JPEG, or a single-page PDF according to the filename extension; PDF uses the selected OCR setting. The existing PDF export creates a document in page order, suggests a timestamped filename, and offers to open the saved document. OCR runs locally using the selected Tesseract language and adds searchable text. Server addresses, scanner selections, scan settings, areas, and export options are saved in the application's user-data directory; scanned pages themselves are held in memory until the app closes, so export before quitting. Large scans, editing, and long documents can use significant memory; individual command output is limited to 1 GB, and a single scanned page to 1 GB of image data (about 340 megapixels).
 
+Use the copy icon on a page to copy its image to the system clipboard. Paste an image as a new page using the paste icon beside Pages or Ctrl+V. DPI is read from clipboard image metadata when available; otherwise the ruler reports unknown DPI and PDF export uses 300 DPI. Clipboard formats and applications may discard image DPI metadata.
+
 ## Current limitations
 
 - No direct local USB, native WIA/TWAIN support, automatic document rotation, or persistent scan sessions. A local scanner must be shared through a reachable SANE server.

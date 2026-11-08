@@ -1,6 +1,6 @@
 {
   "name": "sanewin-ng",
-  "version": "0.5.0",
+  "version": "0.6.0",
   "description": "A modern desktop client for SANE scanners",
   "main": "src/main.js",
   "scripts": {
